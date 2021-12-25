@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memberMapper">
+
+	<!-- 신청TB 등록 -->
+	<insert id="apply" parameterType="com.sunrise.member.vo.MemberVO">	
+		INSERT INTO RCVAPPL ( SSN, RCV_D, RCV_SEQ_NO, APPL_D, APPL_CLAS, BRD, HG_NM, ENG_NM, BIRTH_D
+							, STL_DD, STL_MTD, BNK_CD, STL_ACT, STMT_SND_MTD, BILLADR_ZIP, BILLADR_ADR1
+							, EMAIL_ADR, HDP_NO, SCRT_NO, IMPSB_CLAS, IMPSB_CD)
+					 VALUES ( #{SSN}, SYSDATE, RCV_SEQ_NO.NEXTVAL, REPLACE(#{APPL_D}, '-', ''), #{APPL_CLAS}
+					 		, #{BRD}, #{HG_NM}, #{ENG_NM}, #{BIRTH_D}, #{STL_DD}, #{STL_MTD}, #{BNK_CD}, #{STL_ACT}
+					 		, #{STMT_SND_MTD}, #{BILLADR_ZIP}, #{BILLADR_ADR1}, #{EMAIL_ADR}, #{HDP_NO}, #{SCRT_NO}
+					 		, #{IMPSB_CLAS}, #{IMPSB_CD})
+	 		<selectKey keyProperty="RCV_SEQ_NO" resultType="java.lang.String" order="AFTER"> 
+				SELECT RCV_SEQ_NO.CURRVAL AS RCV_SEQ_NO FROM DUAL 
+			</selectKey>
+	</insert>
+	
+	<!-- CRD_NO.NEXTVAL -->
+	<select id="crd_no_seq" resultType="String">
+		<![CDATA[SELECT LPAD(CRD_NO.NEXTVAL, 9, '0') AS CRD_NO FROM DUAL]]>
+	</select>
+	
+	<!-- selectbox comm_code 테이블에서 신청구분 APPL_CLAS CODE ()값 가져오기 -->
+	<select id="getAPPL_CLAS" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C007' ORDER BY GROUP_CD]]>
+	</select>
+	
+	<!-- selectbox 브랜드 BRD -->
+	<select id="getBRD" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C004' ORDER BY GROUP_CD]]>
+	</select>
+	
+	<!-- selectbox 결제일자 -->
+	<select id="getSTL_DD" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C009' ORDER BY GROUP_CD]]>
+	</select>
+	
+	<!-- selectbox 결제방법 STL_MTD -->
+	<select id="getSTL_MTD" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C002' ORDER BY GROUP_CD]]>
+	</select>
+	
+	<!-- selectbox 결제은행 BNK_CD -->
+	<select id="getBNK_CD" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C003' ORDER BY GROUP_CD]]>
+	</select>
+	
+	<!-- selectbox 청구서 발송방법 STMT_SND_MTD -->
+	<select id="getSTMT_SND_MTD" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C006' ORDER BY GROUP_CD]]>
+	</select>
+</mapper>

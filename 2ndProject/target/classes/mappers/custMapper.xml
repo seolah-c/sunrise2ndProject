@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="custMapper">
+
+	<!-- CUST_NO.NEXTVAL -->
+	<select id="cust_no_seq" resultType="String">
+		<![CDATA[SELECT CUST_NO.NEXTVAL AS CUST_NO FROM DUAL]]>
+	</select>
+	
+	<!-- custTB seq -> 결제, 카드 테이블에 집어넣기 -->
+	<select id="comm_custNo" resultType="com.sunrise.member.vo.CustVO">
+		<![CDATA[INSERT ALL INTO CUST VALUES (#{CUST_NO}) INTO BILL VALUES (#{CUST_NO}) INTO CRD VALUES(#{CUST_NO}) SELECT * FROM DUAL]]>
+	</select>
+	
+	<!-- 최초입회일자 조회 쿼리(고객 TB : REG_D 컬럼에 RCVAPPL TB : RCV_D 값 가져와서 넣기) -->
+	<update id="set_init_D" parameterType="com.sunrise.member.vo.CustVO">
+		<![CDATA[UPDATE CUST CT SET REG_D = (SELECT DISTINCT MIN(RCV_D) AS RCV_D FROM RCVAPPL R WHERE CT.SSN=R.SSN) WHERE CT.SSN=#{SSN}]]>
+	</update>	
+	
+	
+	<!-- 불능 체크 -->
+	<!-- 당일 신청 내역 존재 체크 -->
+	<select id="chk_Dday_history" resultType="int">
+		<![CDATA[SELECT COUNT (*) FROM RCVAPPL WHERE SSN = #{SSN} AND RCV_D = TO_CHAR(SYSDATE)]]>
+	</select>
+	
+	<!-- 기존 카드 존재 체크 (신규등록 신청 시 )-->
+	<select id="chk_crd_exist" resultType="int">
+		<![CDATA[SELECT COUNT (*) FROM CRD WHERE SSN = #{SSN}]]>
+	</select>
+	
+	<!-- 기존 카드 존재 (추가 신청 시) -->
+	<select id="chk_crd_Noexist1" resultType="int">
+		<![CDATA[SELECT COUNT (*) FROM CRD WHERE SSN = #{SSN} AND BRD = #{BRD}]]>
+	</select>
+	
+	<!-- 기존 카드 존재 (재발급 신청 시) -->
+	<select id="chk_crd_Noexist" resultType="int">
+		<![CDATA[SELECT COUNT (*) FROM CRD WHERE SSN = #{SSN} AND BRD != #{BRD}]]>
+	</select>
+	
+	
+	<!-- 최초신규 -->
+	<!-- 고객테이블 등록 -->
+	<insert id="insert_cust" parameterType="com.sunrise.member.vo.CustVO">
+		INSERT INTO CUST (CUST_NO, SSN, REG_D, HG_NM, BIRTH_D, HDP_NO) 
+		VALUES (#{CUST_NO}, #{SSN}, SYSDATE, #{HG_NM}, #{BIRTH_D}, #{HDP_NO})
+	</insert>
+	
+	<!-- 결제테이블 등록 -->
+	<insert id="insert_bill" parameterType="com.sunrise.member.vo.CustVO">
+		INSERT INTO BILL (CUST_NO, STL_ACT, BNK_CD, DPS_NM, STL_MTD, STL_DD, PRCS_CLAS, STMT_SND_MTD, BILLADR_ZIP, BILL_ADR1, EMAIL_ADR)
+		VALUES(#{CUST_NO}, #{STL_ACT}, #{BNK_CD}, #{HG_NM}, #{STL_MTD}, #{STL_DD} , '1', #{STMT_SND_MTD}, #{BILLADR_ZIP}, #{BILLADR_ADR1}, #{EMAIL_ADR})
+	</insert>
+	
+	<!-- 카드테이블 등록 -->
+	<insert id="insert_crd" parameterType="com.sunrise.member.vo.CustVO" useGeneratedKeys="true">
+		INSERT INTO CRD (CRD_NO, CUST_NO, REG_D, SSN, VLD_DUR, BRD, SCRT_NO, ENG_NM, BF_CRD_NO, LST_CRD_F, FST_REG_D, CRD_GRD) 
+		VALUES (CRD_NO.NEXTVAL, #{CUST_NO}, SYSDATE, #{SSN}, SUBSTR(REPLACE(ADD_MONTHS(SYSDATE, 60), '-', ''),1 ,6), #{BRD}, #{SCRT_NO}, #{ENG_NM}, '0', '1', SYSDATE, '1')
+		<selectKey keyProperty="CRD_NO" resultType="java.lang.String" order="AFTER"> 
+			SELECT CRD_NO.CURRVAL AS CRD_NO FROM DUAL 
+		</selectKey>
+	</insert>
+	
+	
+	<!-- 신청테이블에 새로 생성된 CRD_NO 값 update -->
+	<update id="upd_crdNo" parameterType="com.sunrise.member.vo.CustVO">
+		<![CDATA[UPDATE RCVAPPL SET CRD_NO = #{CRD_NO} WHERE SSN=#{SSN} AND CRD_NO is NULL]]>
+	</update>	
+	
+	<!-- 불능일 때 신청테이블에 새로 불능구분, 불능코드 update -->
+	<!-- RCV_D 값 가져오기 -->
+	<select id="get_rcv_d" resultType="com.sunrise.member.vo.MemberVO">
+		<![CDATA[SELECT DISTINCT RCV_D FROM RCVAPPL WHERE SSN=#{SSN} AND RCV_SEQ_NO = #{RCV_SEQ_NO}]]>
+	</select>
+	
+	<!-- 불능인지 아닌지 불능이 1, 불능코드 01, 04, 05 -->
+	<update id="upd_imp_status" parameterType="com.sunrise.member.vo.MemberVO">
+		<![CDATA[UPDATE RCVAPPL SET IMPSB_CLAS = '1', IMPSB_CD = #{IMPSB_CD} WHERE SSN=#{SSN} AND RCV_SEQ_NO = #{RCV_SEQ_NO} AND RCV_D = #{RCV_D}]]>
+	</update>
+	
+	<!-- CUST_NO 가져오기 -->
+	<select id="get_custNo" resultType="com.sunrise.member.vo.MemberVO">
+		<![CDATA[SELECT DISTINCT CUST_NO FROM CRD WHERE SSN=#{SSN}]]>
+	</select>
+	
+	
+	<!-- 추가신규 -->
+	<!-- 주민번호로 CUST TB에서 고객정보 가지고 오기 -->
+	<select id="get_custinfo" resultType="com.sunrise.member.vo.CustVO">
+		<![CDATA[SELECT * FROM CUST WHERE SSN = #{SSN}]]>
+	</select>
+	
+	<!-- 고객테이블 update -->
+	<insert id="upd_cust_extra" parameterType="com.sunrise.member.vo.CustVO">
+		<!-- INSERT INTO CUST (CUST_NO, SSN, REG_D, HG_NM, BIRTH_D, HDP_NO) 
+		VALUES (#{최초신규 때 만들어진 CUST_NO}, #{SSN}, SYSDATE(고객테이블에 insert된 날짜), #{HG_NM}, #{BIRTH_D}, #{HDP_NO}) -->
+	</insert>
+	
+	<!-- 결제테이블 update -->
+	<insert id="upd_bill_extra" parameterType="com.sunrise.member.vo.CustVO">
+		<!-- INSERT INTO BILL (CUST_NO, STL_ACT, BNK_CD, DPS_NM, STL_MTD, STL_DD, PRCS_CLAS, STMT_SND_MTD, BILLADR_ZIP, BILL_ADR1, EMAIL_ADR)
+		VALUES(#{최초신규 때 만들어진 CUST_NO}, #{STL_ACT!}, #{BNK_CD!}, #{HG_NM}, #{STL_MTD!}, #{STL_DD!} , '1', #{STMT_SND_MTD!}, #{BILLADR_ZIP!}, #{BILLADR_ADR1!}, #{EMAIL_ADR!}) -->
+	</insert>
+	
+	<!-- 카드테이블 insert -->
+	<insert id="insert_crd_extra" parameterType="com.sunrise.member.vo.CustVO">
+		INSERT INTO CRD (CRD_NO, CUST_NO, REG_D, SSN, VLD_DUR, BRD, SCRT_NO, ENG_NM, LST_CRD_F, CRD_GRD) 
+		VALUES (CRD_NO.NEXTVAL, #{CUST_NO}, SYSDATE, #{SSN}, SUBSTR(REPLACE(ADD_MONTHS(SYSDATE, 60), '-', ''),1 ,6), #{BRD}, #{SCRT_NO}, #{ENG_NM}, '1', '1')
+	</insert>
+	
+	
+	<!-- 재발급 -->
+	<!-- BF_CRD_NO 가져오기 -->
+	<select id="get_BF_CRD_NO" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT CRD_NO FROM CRD WHERE CUST_NO=#{CUST_NO} AND BRD=#{BRD} AND LST_CRD_F = '1']]>
+	</select>
+	
+	<!-- 기존에 쓰던 카드테이블에 update : 최종카드여부(LST_CRD_F) -->
+	<update id="upd_crd_renewal" parameterType="com.sunrise.member.vo.CustVO">
+	<![CDATA[UPDATE CRD SET LST_CRD_F = '0' WHERE CUST_NO=#{CUST_NO} AND BRD=#{BRD} AND LST_CRD_F = '1']]>
+	</update>
+	
+	<!-- 카드테이블 새로 발급 받은 카드 Insert(+BF_CRD_NO) -->
+	<insert id="insert_crd_renewal" parameterType="com.sunrise.member.vo.CustVO">
+		INSERT INTO CRD (CRD_NO, CUST_NO, REG_D, SSN, VLD_DUR, BRD, SCRT_NO, ENG_NM, BF_CRD_NO, LST_CRD_F, CRD_GRD) 
+		VALUES (CRD_NO.NEXTVAL, #{CUST_NO}, SYSDATE, #{SSN}, SUBSTR(REPLACE(ADD_MONTHS(SYSDATE, 60), '-', ''),1 ,6), #{BRD}, #{SCRT_NO}, #{ENG_NM}, #{BF_CRD_NO}, '1', '1')
+	</insert>
+	
+</mapper>
