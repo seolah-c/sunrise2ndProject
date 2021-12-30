@@ -57,4 +57,21 @@ public class MemberDAOImpl implements MemberDAO {
 		sqlSession.insert("memberMapper.apply", memberVO);
 	}
 	
+	// 신청TB 조회 결과 값 가지고 오기
+	@Override
+	public MemberVO chk_inquiry(MemberVO memberVO) throws Exception {
+		return sqlSession.selectOne("memberMapper.chk_inquiry", memberVO);
+	}
+	
+	// 기간별 내역조회 페이지 결과 값 가지고 오기
+	@Override
+	public List<MemberVO> period(MemberVO memberVO) throws Exception {
+		return sqlSession.selectList("memberMapper.period", memberVO);
+	}
+	
+	// 색인별 내역조회 페이지 결과 값 가지고 오기
+	@Override
+	public List<MemberVO> index(MemberVO memberVO) throws Exception {
+		return sqlSession.selectList("memberMapper.index", memberVO);
+	}
 }

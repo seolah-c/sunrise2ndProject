@@ -65,5 +65,21 @@ public class MemberServiceImpl implements MemberService {
 		dao.apply(memberVO);
 	}
 	
-
+	// 신청TB 조회 결과 값 가지고 오기
+	@Override
+	public MemberVO chk_inquiry(MemberVO memberVO) throws Exception {
+		return dao.chk_inquiry(memberVO);
+	}
+	
+	// 기간별 내역조회 페이지 결과 값 가지고 오기
+	@Override
+	public List<MemberVO> period(MemberVO memberVO) throws Exception {
+		return dao.period(memberVO);
+	}
+	
+	// 기간별 내역조회 페이지 결과 값 가지고 오기
+	@Override
+	public List<MemberVO> index(MemberVO memberVO) throws Exception {
+		return dao.index(memberVO);
+	}
 }

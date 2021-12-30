@@ -3,6 +3,7 @@ package com.sunrise.member.controller;
 import java.util.List;
 
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.ibatis.reflection.SystemMetaObject;
 import org.slf4j.Logger;
@@ -11,8 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.sunrise.member.service.CustService;
 import com.sunrise.member.service.ImpsbService;
@@ -37,9 +41,11 @@ public class MemberController {
 	
 	// 입회신청서 작성 화면
 	@RequestMapping(value = "/applyview", method = RequestMethod.GET)
-	public void applyview(Locale locale, Model model) throws Exception{
+	public void applyview(@RequestParam(value="RCV_D", required=false) String RCV_D, 
+						  @RequestParam(value="RCV_SEQ_NO", required=false) String RCV_SEQ_NO,
+						  @RequestParam(value="SSN", required=false) String SSN, Locale locale, Model model) throws Exception{
 		
-		logger.info("writeView============================================================");
+		logger.info("이가탄============================================================" + RCV_D + RCV_SEQ_NO + SSN);
 		List<MemberVO> APPL_CLAS = service.getAPPL_CLAS();
 		System.out.println(APPL_CLAS.get(0).getCODE_NM()+"11111111111111111111111111111111111111");
 		List<MemberVO> BRD = service.getBRD();
@@ -55,6 +61,9 @@ public class MemberController {
 		model.addAttribute("BNK_CD", BNK_CD); // 결제은행 셀렉트박스
 		model.addAttribute("STMT_SND_MTD", STMT_SND_MTD); // 청구서발송방법 셀렉트박스
 		System.out.println(APPL_CLAS.get(0).getAPPL_CLAS()+"11111111111111111111111111111111111111");
+		model.addAttribute("RCV_D", RCV_D);
+		model.addAttribute("RCV_SEQ_NO", RCV_SEQ_NO);
+		model.addAttribute("SSN", SSN);
 		
 	}
 	
@@ -63,12 +72,12 @@ public class MemberController {
 	public String write(MemberVO memberVO) throws Exception {
 		String b = memberVO.getBIRTH_D();
 		b = b.replaceAll("-", "");
-		
+		logger.info("비밀번호쳌------" + memberVO.getSCRT_NO());
 		logger.info("apply------" + b);
 		memberVO.setBIRTH_D(b);
 		//불능체크 함수 호출 if 불능인경우 home으로 가고 else if 능인경우 vocheck호출
-		if(!chk_Impsb_code(memberVO)) {//chk_Impsb_code false(능)일경우 vocheck 호출 
-			vocheck(memberVO);
+		if(!chk_Impsb_code(memberVO)) {//chk_Impsb_code false(능)일경우 vocheck 호출
+			vocheck(memberVO);  
 		}
 		
 		return "redirect:/";
@@ -254,19 +263,90 @@ public class MemberController {
 		return "redirect:/home";
 	}
 	
-
+	// 입회신청서에서 "조회" 버튼 클릭 시 조회내역 화면
+	@ResponseBody
+	@RequestMapping(value = "chk_inquiry")
+	public MemberVO chk_inquiry(@RequestBody Map<String,Object> params) throws Exception{//@RequestBody MemberVO memberVO   
+		logger.info("chk_inquiry");
+		logger.info("--------------" + params.get("SSN"));
+		
+		MemberVO memberVO = new MemberVO();
+		params.get("SSN");
+		memberVO.setSSN((String) params.get("SSN"));
+		memberVO.setRCV_D((String) params.get("RCV_D"));
+		memberVO.setRCV_SEQ_NO((String) params.get("RCV_SEQ_NO"));
+		
+		logger.info("-----------------------------" + memberVO.getSSN() + ", " + memberVO.getRCV_D() +", " + memberVO.getRCV_SEQ_NO());
+		
+		MemberVO items = service.chk_inquiry(memberVO);
+		logger.info("멤버브이오============================================================" + memberVO.getRCV_D());
+		
+		return items;
+	}
+	
 	
 	// 기간별 입회신청 내역조회 화면으로 이동
 	@RequestMapping(value = "/period", method = RequestMethod.GET)
-	public void index() throws Exception{
+	public void period(Locale locale, Model model) throws Exception{
 		logger.info("period");
+		
+		List<MemberVO> APPL_CLAS = service.getAPPL_CLAS();
+		model.addAttribute("APPL_CLAS", APPL_CLAS); // 신청구분 셀렉트박스
 		
 	}
 	
+	// 기간별 입회신청 내역조회 화면에서 "조회" 버튼 클릭 시 조회내역 화면
+	@ResponseBody
+	@RequestMapping(value = "period")
+	public List<MemberVO> period(@RequestBody Map<String,Object> params) throws Exception{  
+		logger.info("period");
+		logger.info("--------------" + params.get("APPL_D"));
+		
+		MemberVO memberVO = new MemberVO();
+		params.get("APPL_D");
+		String tmp = (String)params.get("APPL_D1");
+		tmp = tmp.replaceAll("-", "");
+		params.get("APPL_D2");
+		String tmp2 = (String)params.get("APPL_D2");
+		tmp2 = tmp2.replaceAll("-", "");
+		memberVO.setAPPL_D1(tmp);
+		memberVO.setAPPL_D2(tmp2);
+		memberVO.setAPPL_CLAS((String) params.get("APPL_CLAS"));
+		memberVO.setSSN((String) params.get("SSN"));
+		
+		logger.info("-----------------------------" + memberVO.getAPPL_D1() + ", " + memberVO.getAPPL_CLAS() +", " + memberVO.getSSN());
+		
+		List<MemberVO> history = service.period(memberVO);
+		logger.info("멤버브이오============================================================" + memberVO.getSSN());
+		
+		return history;
+	}
+	
+	
 	// 색인별 내역조회 화면으로 이동
 	@RequestMapping(value = "/index", method = RequestMethod.GET)
-	public void period() throws Exception{
+	public void index(Locale locale, Model model) throws Exception{
 		logger.info("index");
 		
+	}
+	
+	// 색인별 내역조회 화면에서 "조회" 버튼 클릭 시 조회내역 화면
+	@ResponseBody
+	@RequestMapping(value = "index")
+	public List<MemberVO> index(@RequestBody Map<String,Object> params) throws Exception{  
+		logger.info("index");
+		logger.info("--------------" + params.get("HG_NM"));
+		
+		MemberVO memberVO = new MemberVO();
+		memberVO.setHG_NM((String)params.get("HG_NM"));
+		memberVO.setBIRTH_D((String)params.get("BIRTH_D"));
+		memberVO.setHDP_NO((String)params.get("HDP_NO"));
+		
+		logger.info("-----------------------------" + memberVO.getHG_NM() + ", " + memberVO.getBIRTH_D() +", " + memberVO.getHDP_NO());
+		
+		List<MemberVO> cardhistory = service.index(memberVO);
+		logger.info("멤버브이오============================================================" + memberVO.getHG_NM());
+		
+		return cardhistory;
 	}
 }

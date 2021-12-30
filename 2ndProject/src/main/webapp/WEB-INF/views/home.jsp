@@ -12,9 +12,22 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	
+	<style>
+		.center{
+		    position: absolute;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		}
+		body{
+		background-image : url('https://venturebeat.com/wp-content/uploads/2020/09/GettyImages-520682906-e1619014289419.jpg?fit=750%2C563&strip=all');
+		background-size : cover;
+		}
+		
+
+	</style>
 	
 </head>
-<a href="member/applyview">게시판으로 이동</a><br/>
 <script type="text/javascript">
 	$(document).ready(function(){
 		
@@ -30,15 +43,24 @@
 			location.href="member/period";
 		})
 	
+		$("#test").on("click", function(){
+			window.open("member/period", "팝업", "width = 500, height = 500, top = 100, left = 200, location = no");
+			//location.href="member/period";
+		})
 	})
+	
+	
 </script>
 
 
-<body>
-
-<button type="button" class="btn btn-primary" id="applyviewBtn">입회신청서 등록 페이지</button>
-<button type="button" class="btn btn-primary" id="periodBtn">기간별 입회신청 내역조회</button>
+<body id="background">
+<div class="center">
+<button type="button" class="btn btn-primary" id="applyviewBtn">입회신청서 등록 페이지</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="button" class="btn btn-primary" id="periodBtn">기간별 입회신청 내역조회</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <button type="button" class="btn btn-primary" id="indexBtn">색인별 내역조회</button>
-
+</div>
+<div>
+<button type="button" class="btn btn-primary" id="test" style="display: none;"></button>
+</div>
 </body>
 </html>

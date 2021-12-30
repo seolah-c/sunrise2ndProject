@@ -50,4 +50,60 @@
 	<select id="getSTMT_SND_MTD" resultType="com.sunrise.member.vo.MemberVO">
 	<![CDATA[SELECT CODE, CODE_NM FROM COMM_CODE_DTL WHERE GROUP_CD = 'C006' ORDER BY GROUP_CD]]>
 	</select>
+	
+	<!-- chk_inquiry 쿼리 -->
+	<select id="chk_inquiry" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT * FROM RCVAPPL 
+			  WHERE 1=1
+	]]>
+	 <if test="SSN != null and !SSN.equals('')">
+		AND SSN = #{SSN}
+	</if>
+	<if test="RCV_D != null and !RCV_D.equals('')">
+		AND RCV_D = #{RCV_D}
+	</if>
+	<if test="RCV_SEQ_NO != null and !RCV_SEQ_NO.equals('')">
+		AND RCV_SEQ_NO = #{RCV_SEQ_NO}
+	</if>
+	 
+	</select>
+	
+	<!-- period 쿼리 -->
+	<select id="period" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[SELECT * FROM RCVAPPL 
+			  WHERE 1=1
+	]]>
+	 <if test="APPL_D1 != null and !APPL_D1.equals('') and APPL_D2 != null and !APPL_D2.equals('')">
+		 AND (TO_NUMBER(APPL_D) BETWEEN #{APPL_D1} AND #{APPL_D2})
+	</if>
+	<if test="APPL_CLAS != null and !APPL_CLAS.equals('')">
+		AND APPL_CLAS = #{APPL_CLAS}
+	</if>
+	<if test="SSN != null and !SSN.equals('')">
+		AND SSN = #{SSN}
+	</if>
+	 
+	</select>
+	
+	<!-- index 쿼리 -->
+	<select id="index" resultType="com.sunrise.member.vo.MemberVO">
+	<![CDATA[
+		SELECT * 
+		 FROM CUST C 
+		 INNER JOIN BILL B
+		    ON C.CUST_NO = B.CUST_NO
+		 WHERE 1=1        
+	]]>
+	 <if test="HG_NM != null and !HG_NM.equals('')">
+  		   AND HG_NM 	= #{HG_NM}
+	</if>
+	<if test="BIRTH_D != null and !BIRTH_D.equals('')">
+		   AND BIRTH_D 	= #{BIRTH_D}
+	</if>
+	<if test="HDP_NO != null and !HDP_NO.equals('')">
+		   AND HDP_NO 	= #{HDP_NO}
+	</if>
+	 
+	</select>
+	
 </mapper>

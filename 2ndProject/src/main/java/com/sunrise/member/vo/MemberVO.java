@@ -5,6 +5,8 @@ public class MemberVO {
 	private String RCV_D;
 	private String RCV_SEQ_NO;
 	private String APPL_D;
+	private String APPL_D1;
+	private String APPL_D2;
 	private String APPL_CLAS;
 	private String BRD;
 	private String HG_NM;
@@ -232,6 +234,16 @@ public class MemberVO {
 	public void setBF_CRD_NO(String bF_CRD_NO) {
 		BF_CRD_NO = bF_CRD_NO;
 	}
-	
-	
+	public String getAPPL_D1() {
+		return APPL_D1;
+	}
+	public void setAPPL_D1(String aPPL_D1) {
+		APPL_D1 = aPPL_D1;
+	}
+	public String getAPPL_D2() {
+		return APPL_D2;
+	}
+	public void setAPPL_D2(String aPPL_D2) {
+		APPL_D2 = aPPL_D2;
+	}
 }

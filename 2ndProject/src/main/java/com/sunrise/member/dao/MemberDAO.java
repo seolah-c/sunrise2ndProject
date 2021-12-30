@@ -27,4 +27,13 @@ public interface MemberDAO {
 	
 	// 신청TB 등록 (insert)
 	public void apply(MemberVO memberVO) throws Exception;
+	
+	// 신청TB 조회 결과 값 가지고 오기
+	public MemberVO chk_inquiry(MemberVO memberVO) throws Exception;
+	
+	// 기간별 내역조회 페이지 결과 값 가지고 오기
+	public List<MemberVO> period(MemberVO memberVO) throws Exception;
+	
+	// 색인별 내역조회 페이지 결과 값 가지고 오기
+	public List<MemberVO> index(MemberVO memberVO) throws Exception;
 }
